@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @ControllerAdvice
 public class ExceptionsHandler {
@@ -26,4 +27,10 @@ public class ExceptionsHandler {
     public ExceptionEntity handleReadRequestException(ReadRequestBodyException e) {
         return new ExceptionEntity(e.getMessage(), e.getLocalizedMessage());
     }
+
+    /*@ExceptionHandler
+    @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+    public ExceptionEntity handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
+        return new ExceptionEntity(e.getMessage(), e.getLocalizedMessage());
+    }*/
 }

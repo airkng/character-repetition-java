@@ -3,6 +3,7 @@ package com.t1consulting.testcase.characterrepetition.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.t1consulting.testcase.characterrepetition.dto.request.CharacterEntityRequestDto;
+import com.t1consulting.testcase.characterrepetition.dto.response.CharacterEntityResponseDto;
 import com.t1consulting.testcase.characterrepetition.dto.response.RepetitionsEntityResponseDto;
 import com.t1consulting.testcase.characterrepetition.exceptions.IllegalFormatException;
 import com.t1consulting.testcase.characterrepetition.exceptions.IllegalFormatRequestBodyException;
@@ -10,9 +11,13 @@ import com.t1consulting.testcase.characterrepetition.exceptions.ReadRequestBodyE
 import com.t1consulting.testcase.characterrepetition.mapper.CharacterEntityMapper;
 import com.t1consulting.testcase.characterrepetition.model.Format;
 import com.t1consulting.testcase.characterrepetition.service.EntityService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -34,11 +39,11 @@ import static org.springframework.http.MediaType.TEXT_PLAIN;
 @Validated
 @Slf4j
 public class CharacterEntityController {
+
     private final EntityService service;
-    private final CharacterEntityMapper entityMapper;
+
 
     @PostMapping(consumes = {"application/json", "text/plain"}, produces = {"application/json", "text/plain"})
-    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> addEntityToDb(final ServletRequest request,
                                            @RequestHeader(name = "answer-format", required = false, defaultValue = "TEXT") final Format format) {
         log.info("Запрос на создание сущности текста");
@@ -56,6 +61,8 @@ public class CharacterEntityController {
 
     }
 
+    private final CharacterEntityMapper entityMapper;
+
     @GetMapping("/repetitions/{id}")
     public ResponseEntity<?> getRepetitionsById(@PathVariable(name = "id", required = true) @Positive final Long id,
                                                 @RequestHeader(name = "answer-format", required = false, defaultValue = "TEXT") final Format format) {
@@ -63,16 +70,16 @@ public class CharacterEntityController {
         var result = service.getRepetitionsById(id);
 
         if (format.name().equalsIgnoreCase("text")) {
-            return ResponseEntity.created(URI.create("")).contentType(TEXT_PLAIN).body(result.getResult());
+            return ResponseEntity.ok().contentType(TEXT_PLAIN).body(result.getResult());
         } else if (format.name().equalsIgnoreCase("json")) {
-            return ResponseEntity.created(URI.create("")).contentType(APPLICATION_JSON).body(result);
+            return ResponseEntity.ok().contentType(APPLICATION_JSON).body(result);
         } else {
             log.info("Введен несуществующий формат получения данных в header:answer-format");
             throw new IllegalFormatException("Несуществующий формат получения данных");
         }
     }
 
-    @GetMapping(value = "/repetitions", consumes = {"application/json", "text/plain"}, produces = {"application/json", "text/plain"})
+    @GetMapping(value = "/repetitions", consumes = {"application/json", "text/plain", "*/*"}, produces = {"application/json", "text/plain"})
     public ResponseEntity<?> getRepetitionNow(final ServletRequest request,
                                               @RequestHeader(name = "answer-format", required = false, defaultValue = "TEXT") final Format format,
                                               @RequestParam(name = "text", required = false) @Valid @Size(max = 50, min = 1) final String text) {
@@ -99,9 +106,9 @@ public class CharacterEntityController {
         }
 
         if (format.name().equalsIgnoreCase("text")) {
-            return ResponseEntity.created(URI.create("")).contentType(TEXT_PLAIN).body(response.getResult());
+            return ResponseEntity.ok().contentType(TEXT_PLAIN).body(response.getResult());
         } else if (format.name().equalsIgnoreCase("json")) {
-            return ResponseEntity.created(URI.create("")).contentType(APPLICATION_JSON).body(response);
+            return ResponseEntity.ok().contentType(APPLICATION_JSON).body(response);
         } else {
             log.info("Введен несуществующий формат получения данных в header:answer-format");
             throw new IllegalFormatException("Несуществующий формат получения данных");
@@ -109,8 +116,11 @@ public class CharacterEntityController {
     }
 
     private CharacterEntityRequestDto readBody(final ServletRequest request) {
-        CharacterEntityRequestDto requestDto;
+        CharacterEntityRequestDto requestDto = null;
         String type = request.getContentType();
+        if (type == null) {
+            return requestDto;
+        }
         try (BufferedReader reader = request.getReader()) {
             switch (type) {
                 case "application/json" -> {
@@ -121,7 +131,6 @@ public class CharacterEntityController {
                     String info = reader.readLine();
                     requestDto = entityMapper.toEntityRequestDto(info);
                 }
-                case "none" -> requestDto = null;
                 default -> throw new IllegalFormatRequestBodyException(String.format("Неверный формат данных клиента %s", type));
             }
         } catch (IOException ex) {

@@ -1,7 +1,6 @@
 package com.t1consulting.testcase.characterrepetition.service;
 
 import com.t1consulting.testcase.characterrepetition.dto.request.CharacterEntityRequestDto;
-import com.t1consulting.testcase.characterrepetition.dto.response.CharacterEntityResponseDto;
 import com.t1consulting.testcase.characterrepetition.dto.response.RepetitionsEntityResponseDto;
 import com.t1consulting.testcase.characterrepetition.exceptions.NotFoundException;
 import com.t1consulting.testcase.characterrepetition.mapper.CharacterEntityMapper;
@@ -10,27 +9,45 @@ import com.t1consulting.testcase.characterrepetition.repository.EntityRepository
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
-import java.util.*;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Validated
 @Slf4j
 public class EntityServiceImpl implements EntityService {
     private final EntityRepository repository;
     private final CharacterEntityMapper mapper;
+    private final Validator validator;
 
     @Override
     public CharacterEntity add(CharacterEntityRequestDto requestDto) {
+        validateRequestDto(requestDto);
         var entityOpt = repository.findByText(requestDto.getText());
         if (entityOpt.isEmpty()) {
             log.info("Сохранение в бд сущности {}", requestDto);
             return repository.save(mapper.toEntity(requestDto));
         }
         return entityOpt.get();
+    }
+
+    private void validateRequestDto(CharacterEntityRequestDto requestDto) {
+        Set<ConstraintViolation<CharacterEntityRequestDto>> violations = validator.validate(requestDto);
+
+        if (!violations.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (ConstraintViolation<CharacterEntityRequestDto> constraintViolation : violations) {
+                sb.append(constraintViolation.getMessage());
+            }
+            throw new ConstraintViolationException("Error occurred: " + sb.toString(), violations);
+        }
     }
 
     @Override
@@ -55,10 +72,10 @@ public class EntityServiceImpl implements EntityService {
         Map<Character, Integer> sorted = map.entrySet().stream()
                 .sorted(Map.Entry.<Character, Integer>comparingByValue().reversed())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (e1, e2) -> e1, LinkedHashMap::new));;
+                        (e1, e2) -> e1, LinkedHashMap::new));
         StringBuilder builder = new StringBuilder();
         int count = 0;
-        for(var entry : sorted.entrySet()) {
+        for (var entry : sorted.entrySet()) {
             count++;
             if (count == sorted.size()) {
                 builder.append("\"" + entry.getKey() + "\":" + entry.getValue());
@@ -75,6 +92,7 @@ public class EntityServiceImpl implements EntityService {
 
     @Override
     public RepetitionsEntityResponseDto getRepetitions(CharacterEntityRequestDto requestDto) {
+        validateRequestDto(requestDto);
         return findRepetitions(requestDto.getText());
     }
 

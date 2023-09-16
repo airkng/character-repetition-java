@@ -1,0 +1,322 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Application API",
+    "description": "Тестовое задание для определения количества повторов в тексте. Данный сервис умеет сохранять
+    даннные в базу данных, возвращать количество повторов каждого символа из json файлов, text/plain файлов,
+    query param с ограничением в 50 символов и по id сущности, сохраненной в БД",
+    "contact": {
+      "name": "Alexandr Antonov",
+      "email": "delcher.dev@gmail.com"
+    },
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "t1-consulting-characters service"
+    }
+  ],
+  "paths": {
+    "/characters": {
+      "post": {
+        "tags": [
+            "character-entity-controller"
+        ],
+        "description": "Добавляет сущность в БД и возвращает добавленный объект в формате, зависящем от заголовка 'answer-format', а также Id объекта в заголовке 'id'",
+        "operationId": "addEntityToDb",
+        "parameters": [
+          {
+            "name": "answer-format",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "TEXT",
+              "enum": [
+                  "JSON",
+                  "TEXT"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CharacterRequestBodyJson"
+              }
+            },
+            "text/plain": {
+              "schema": {
+                "$ref": "#/components/schemas/CharacterRequestBodyPlainText"
+              }
+            }
+          }
+        },
+        "responses": {
+          "415": {
+            "description": "Unsupported Media Type. Выбрасывает исключение, если тело запроса не соответствует формату application/json, text/plain",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExceptionEntity"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error. Может быть вызвана ошибкой считывания тела запроса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExceptionEntity"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "CREATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterEntityResponseDto"
+
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterResponsePlainText"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/characters/repetitions": {
+      "get": {
+        "tags": [
+            "character-entity-controller"
+        ],
+        "operationId": "getRepetitionNow",
+        "description": "Получение количества повторений каждого символа текста, полученного из json/application, text/plain или query param(ограничение 50 символов)",
+        "parameters": [
+          {
+            "name": "answer-format",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "TEXT",
+              "enum": [
+                  "JSON",
+                  "TEXT"
+              ]
+            }
+          },
+          {
+            "name": "text",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "type": "string",
+              "example": "aaBbbkd"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CharacterRequestBodyJson"
+              }
+            },
+            "text/plain": {
+              "schema": {
+                "$ref": "#/components/schemas/CharacterRequestBodyPlainText"
+              }
+            }
+          }
+        },
+        "responses": {
+          "415": {
+            "description": "Unsupported Media Type. Выбрасывает исключение, если тело запроса не соответствует формату application/json, text/plain",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExceptionEntity"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error. Непредвиденная ошибка",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExceptionEntity"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepetitionResponseDto"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepetitionsResponseBodyPlainText"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/characters/repetitions/{id}": {
+      "get": {
+        "tags": [
+            "character-entity-controller"
+        ],
+        "operationId": "getRepetitionsById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "answer-format",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "TEXT",
+              "enum": [
+                  "JSON",
+                  "TEXT"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found. Сущность не найдена",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExceptionEntity"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type. Выбрасывает исключение, если тело запроса не соответствует формату application/json, text/plain",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExceptionEntity"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error. Непредвиденная ошибка",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExceptionEntity"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepetitionResponseDto"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepetitionsResponseBodyPlainText"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ExceptionEntity": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example":"сообщение"
+          },
+          "cause": {
+            "type": "string",
+            "example":"краткое сообщение"
+
+          }
+        }
+      },
+      "CharacterEntityResponseDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "example":"aaaBbb"
+            }
+        }
+      },
+      "CharacterResponsePlainText": {
+        "type":"object",
+        "example":"aaaBbb"
+      },
+      "CharacterRequestBodyJson": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 5000,
+            "example": "aaaBbb"
+          }
+        }
+      },
+      "CharacterRequestBodyPlainText": {
+        "type": "string",
+        "maxLength": 5000,
+        "example": "aaaBbb"
+      },
+      "RepetitionResponseDto": {
+        "type": "object",
+        "properties": {
+          "repetitions": {
+            "type": "object",
+            "example": {"a":3,"b":2,"B":1}
+          }
+        }
+      },
+      "RepetitionsResponseBodyPlainText": {
+        "type": "object",
+        "example": "\"a\":3,\"b\":2,\"B\":1"
+      },
+    }
+  }
+}
