@@ -8,7 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface EntityRepository extends JpaRepository<CharacterEntity, Long> {
-    boolean existsByText(String text);
-
     Optional<CharacterEntity> findByText(String text);
 }

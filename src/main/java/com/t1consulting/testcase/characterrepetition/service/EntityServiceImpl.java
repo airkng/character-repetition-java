@@ -40,7 +40,6 @@ public class EntityServiceImpl implements EntityService {
 
     private void validateRequestDto(CharacterEntityRequestDto requestDto) {
         Set<ConstraintViolation<CharacterEntityRequestDto>> violations = validator.validate(requestDto);
-
         if (!violations.isEmpty()) {
             StringBuilder sb = new StringBuilder();
             for (ConstraintViolation<CharacterEntityRequestDto> constraintViolation : violations) {
@@ -91,13 +90,13 @@ public class EntityServiceImpl implements EntityService {
     }
 
     @Override
-    public RepetitionsEntityResponseDto getRepetitions(CharacterEntityRequestDto requestDto) {
+    public RepetitionsEntityResponseDto getRepetitions(final CharacterEntityRequestDto requestDto) {
         validateRequestDto(requestDto);
         return findRepetitions(requestDto.getText());
     }
 
     @Override
-    public RepetitionsEntityResponseDto getRepetitions(String text) {
+    public RepetitionsEntityResponseDto getRepetitions(final String text) {
         return findRepetitions(text);
     }
 }

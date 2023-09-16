@@ -1,7 +1,6 @@
 package com.t1consulting.testcase.characterrepetition.service;
 
 import com.t1consulting.testcase.characterrepetition.dto.request.CharacterEntityRequestDto;
-import com.t1consulting.testcase.characterrepetition.dto.response.CharacterEntityResponseDto;
 import com.t1consulting.testcase.characterrepetition.dto.response.RepetitionsEntityResponseDto;
 import com.t1consulting.testcase.characterrepetition.model.CharacterEntity;
 

@@ -4,13 +4,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @ControllerAdvice
 public class ExceptionsHandler {
 
     @ExceptionHandler(value
-            = { IllegalFormatException.class, IllegalFormatRequestBodyException.class })
+            = {IllegalFormatException.class, IllegalFormatRequestBodyException.class})
     @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
     public ExceptionEntity handleIllegalFormats(RuntimeException e) {
         return new ExceptionEntity(e.getMessage(), e.getLocalizedMessage());
@@ -28,9 +27,4 @@ public class ExceptionsHandler {
         return new ExceptionEntity(e.getMessage(), e.getLocalizedMessage());
     }
 
-    /*@ExceptionHandler
-    @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-    public ExceptionEntity handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
-        return new ExceptionEntity(e.getMessage(), e.getLocalizedMessage());
-    }*/
 }

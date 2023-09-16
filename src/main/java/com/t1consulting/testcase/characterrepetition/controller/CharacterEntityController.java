@@ -3,7 +3,6 @@ package com.t1consulting.testcase.characterrepetition.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.t1consulting.testcase.characterrepetition.dto.request.CharacterEntityRequestDto;
-import com.t1consulting.testcase.characterrepetition.dto.response.CharacterEntityResponseDto;
 import com.t1consulting.testcase.characterrepetition.dto.response.RepetitionsEntityResponseDto;
 import com.t1consulting.testcase.characterrepetition.exceptions.IllegalFormatException;
 import com.t1consulting.testcase.characterrepetition.exceptions.IllegalFormatRequestBodyException;
@@ -11,11 +10,6 @@ import com.t1consulting.testcase.characterrepetition.exceptions.ReadRequestBodyE
 import com.t1consulting.testcase.characterrepetition.mapper.CharacterEntityMapper;
 import com.t1consulting.testcase.characterrepetition.model.Format;
 import com.t1consulting.testcase.characterrepetition.service.EntityService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -39,9 +33,8 @@ import static org.springframework.http.MediaType.TEXT_PLAIN;
 @Validated
 @Slf4j
 public class CharacterEntityController {
-
     private final EntityService service;
-
+    private final CharacterEntityMapper entityMapper;
 
     @PostMapping(consumes = {"application/json", "text/plain"}, produces = {"application/json", "text/plain"})
     public ResponseEntity<?> addEntityToDb(final ServletRequest request,
@@ -60,8 +53,6 @@ public class CharacterEntityController {
         }
 
     }
-
-    private final CharacterEntityMapper entityMapper;
 
     @GetMapping("/repetitions/{id}")
     public ResponseEntity<?> getRepetitionsById(@PathVariable(name = "id", required = true) @Positive final Long id,
@@ -85,7 +76,7 @@ public class CharacterEntityController {
                                               @RequestParam(name = "text", required = false) @Valid @Size(max = 50, min = 1) final String text) {
         log.info("Запрос на выполнение расчета повтора с текстом длины)");
 
-        CharacterEntityRequestDto requestDto = readBody(request);
+        final CharacterEntityRequestDto requestDto = readBody(request);
         RepetitionsEntityResponseDto response = null;
         if (requestDto == null && text == null) {
             throw new IllegalArgumentException("Неверный формат данных");
